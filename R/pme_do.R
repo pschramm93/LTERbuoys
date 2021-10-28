@@ -11,7 +11,7 @@
 ##                --QC to check if quick temp change indicating removed/placed in lake after subsetting
 
 pme_do<-function(do_file,depth.do,deploy,retrieve) {
-
+  if (is.null(light_file)){stop("No light file")}
   if (missing(do_file)){stop("Please provide file path for concatenated PME do file")}
   if (missing(depth.do)){stop("Please provide depth of PME do sensor")}
 
@@ -24,7 +24,7 @@ pme_do<-function(do_file,depth.do,deploy,retrieve) {
   #remove extra variables
   do_pme=within(do_pme,rm(list=c("time_cen","Q","timestamp","batt_v")))
 
-  if (missing(deploy|retrieve )){
+  if (missing(deploy)||missing(retrieve)){
     #proceed to return the data
     message("No deployment or retrieval times given")
   } else{

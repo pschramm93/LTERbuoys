@@ -3,16 +3,17 @@
 
 ##this is an update from the individual lake functions written 9/2020 (see rbr_temp_xxlakeid.R)
 
-##Future additions--add code to subset by deployment and retrieval times
+##Future additions--add code to subset by deployment and retrieval times--DONE
 ##                --make sure deploy/retrieve is posix
 ##                --QC checks that temp is within rage
 ##                --QC to check if quick temp change indicating removed/placed in lake after subsetting
 ##                --Message if temp value is <-100, indicating string not plugged in
 ##                  (after subsetting for deployment/retrieval)
 
-rbr_temp=function(lake,temp_file,depth.temp){
+rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
 
   #Check if all args are present
+  if (is.null(light_file)){stop("No light file")}
   if (missing(lake)){stop("Please provide NTL lake ID")}
   if(lake %in% c("TB","CB","SP","TR","ME")){
         #Good job you entered a valid lake ID
@@ -42,36 +43,24 @@ rbr_temp=function(lake,temp_file,depth.temp){
     names_temp=paste('tempC_',names_temp,'_cm',sep='')
     names(temp2)=c("date_time_UTC",names_temp)
 
-    #Subset data to deployment interval
-    temp2=subset(temp2,date_time_UTC>=deploy &
-                   date_time_UTC<=retrieve)
-
-
-    #Rename dataframe
-    #Should probably get rid of this after some testing...
-    rbr_temp=temp2
-
 
   } else if (lake=="CB"){
     #do CB stuff
     #read in temperatures
     temp=read.table(temp_file,sep=",",skip=1)
     #set names
-    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11")
+    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9")
     #Declare time as Posix
     temp$time_UTC=as.POSIXct(temp$time_UTC,tz="America/Chicago",'%Y-%m-%d %H:%M:%OS')
     attributes(temp$time_UTC)$tzone<-"UTC"
     #Reverse order of temps, since RBR thinks we want the bottom temps first...
-    temp2=temp[,c(1,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2)]
+    temp2=temp[,c(1,10,9,8,7,6,5,4,3,2)]
 
     #Set names of columns based on depth of sensors(build depth vector,add tempC_z_cm to names,set names)
-    names_temp=c(depth+0,depth+25,depth+50,depth+75,depth+100,depth+125,depth+150,depth+175,depth+200)
+    names_temp=c(depth.temp+0,depth.temp+25,depth.temp+50,depth.temp+75,depth.temp+100,
+                 depth.temp+125,depth.temp+150,depth.temp+175,depth.temp+200)
     names_temp=paste('tempC_',names_temp,'_cm',sep='')
     names(temp2)=c("date_time_UTC",names_temp)
-
-    #Rename dataframe
-    #Should probably get rid of this after some testing...
-    rbr_temp=temp2
 
 
   } else if (lake=="SP"){
@@ -92,14 +81,7 @@ rbr_temp=function(lake,temp_file,depth.temp){
     names_temp=paste('tempC_',names_temp,'_cm',sep='')
     names(temp2)=c("date_time_UTC",names_temp)
 
-    #Subset data to deployment interval
-    temp2=subset(temp2,date_time_UTC>=deploy &
-                   date_time_UTC<=retrieve)
 
-
-    #Rename dataframe
-    #Should probably get rid of this after some testing...
-    rbr_temp=temp2
 
 
   } else if (lake=="TR"){
@@ -122,14 +104,6 @@ rbr_temp=function(lake,temp_file,depth.temp){
     names(temp2)=c("date_time_UTC",names_temp)
 
 
-    #Subset data to deployment interval
-    temp2=subset(temp2,date_time_UTC>=deploy &
-                   date_time_UTC<=retrieve)
-
-    #Rename dataframe
-    #Should probably get rid of this after some testing...
-    rbr_temp=temp2
-
 
   }else if (lake=="ME") {
     message("Lake Mendota isn't quite done yet...")
@@ -139,6 +113,22 @@ rbr_temp=function(lake,temp_file,depth.temp){
     message("Please enter a valid NTL lake ID (CB,TB,SP,TR,ME)")
   }
 
+  if (missing(deploy)||missing(retrieve)){
+    #proceed to return the data
+    message("No deployment or retrieval times given, data not subseted")
+  } else{
+    #Subset data to deployment interval
+    temp2=subset(temp2,date_time_UTC>=deploy &
+                    date_time_UTC<=retrieve)
+         #Message if temp data is less than -30, indicating string not attached
+         #Only do if subsetting data
+          if (min(temp2[,2])<0){
+             message("Temperate is less than -20, temp string likely not attached")
+            }
+  }
+
+  rbr_temps=temp2
+
   #Send data table out
-  return(rbr_temp)
+  return(rbr_temps)
 }

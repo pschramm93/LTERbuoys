@@ -14,5 +14,5 @@ loadbuoyfunc<-function(wd){
   source("rbr_temp_SP.R")
   source("rbr_temp_TB.R")
   source("rbr_temp_TR.R" )
-  sourece("rbr_temp.R")
+  source("rbr_temp.R")
 }
