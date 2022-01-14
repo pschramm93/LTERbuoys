@@ -24,49 +24,54 @@ source(paste(wd,"/loadbuoyfunc.R",sep=""))
 loadbuoyfunc(wd)
 
 #Enter deployment and Retrieval times in UTC
-deploy=  as.POSIXct('06/22/2019 08:00',tz='UTC','%m/%d/%Y %H:%M')
-retrieve=as.POSIXct('10/31/2019 02:00',tz='UTC','%m/%d/%Y %H:%M')
+deploy=  as.POSIXct('06/22/2019 06:30',tz='UTC','%m/%d/%Y %H:%M')
+retrieve=as.POSIXct('10/31/2019 01:00',tz='UTC','%m/%d/%Y %H:%M')
 
 #Set sensor depths
-depth.temp=93
-depth.do=153
-depth.light=93
-depth.chla=158
-#depth.co2=185
+depth.temp=25
+depth.do=85
+depth.light=35
+depth.chla=NULL
+depth.co2=NULL
 
-#set lake ID
+#set lake ID for temp string
 lake_ID="CB"
 
+#Set output file name
+file_name="CB_2019.csv"
+
 #Set Files, if no data present set to NULL
-light= NULL
-temp=  'Y:/GLEON/BuoyData/CrystalBog/2019/Temp/063327_20191031_1338/063327_20191031_1338_data.txt'
-do=    'B:/BuoyData/TroutBog/2019-2020_underice_TB/DO/TB_do_2019_underice.TXT'
-chla=  NULL
-co2=   NULL
+lake_file=  'Y:/GLEON/BuoyData/CrystalBog/2019'
+light_file= 'Y:/GLEON/BuoyData/CrystalBog/2019/Light/CB_2019_summer.csv'
+temp_file=  'Y:/GLEON/BuoyData/CrystalBog/2019/Temp/063327_20191031_1338/063327_20191031_1338_data.txt'
+do_file=    'Y:/GLEON/BuoyData/CrystalBog/2019/DO/CB_2019_do.TXT'
+chla_file=  NULL
+co2_file=   NULL
+
 
 
 #Run buoy run
-data.do=pme_do(do,depth.do,deploy,retrieve)
-data.temp=rbr_temp(lake_ID,temp,depth.temp,deploy,retrieve)
-data.light=hobo_light(light,depth.light,deploy,retrieve)
-data.chla=pme_chla(chla,depth.chla,deploy,retrieve)
-data.co2=pro_co2(co2,depth.co2,deploy,retrieve)
+data.do=pme_do(do_file,depth.do,deploy,retrieve)
+data.temp=rbr_temp(lake_ID,temp_file,depth.temp,deploy,retrieve)
+data.light=hobo_light(light_file,depth.light,deploy,retrieve)
+data.chla=pme_chla(chla_file,depth.chla,deploy,retrieve)
+data.co2=pro_co2(co2_file,depth.co2,deploy,retrieve)
 
 
-#Round any of those pesky hobo time stamps...
-#do this in light function
-TB.light$date_time_UTC=round.POSIXt(TB.light$date_time_UTC,unit="mins")
-TB.light$date_time_UTC=as.POSIXct(TB.light$date_time_UTC)
+
+#get dataframes that have "data." pattern
+#param_list=ls(envir = .GlobalEnv)[grep(pattern = "data.",x=ls(envir = .GlobalEnv))]
 
 
-#Combine Data
-#make function
-TB_2019_underice=merge(TB.do,TB.temp,by.x="date_time_UTC",by.y="date_time_UTC",all=T)
-TB_2019_underice=merge(TB_2019_underice,TB.light,by.x="date_time_UTC",by.y="date_time_UTC",all = TRUE)
-TB_2019_underice=merge(TB_2019_underice,TB.chla,by.x="date_time_UTC",by.y="date_time_UTC",all = TRUE)
 
-#TB_2019_underice=merge(TB_2019_underice,TB.co2,by.x="date_time_UTC",by.y="date_time_UTC",all=TRUE)
+data=merge(data.do,data.temp,by.x="date_time_UTC",by.y="date_time_UTC",all=T)
+data=merge(data,data.light,by.x="date_time_UTC",by.y="date_time_UTC",all = T)
 
+data=merge(data,data.co2,by.x="date_time_UTC",by.y="date_time_UTC",all = TRUE)
+
+
+#QC Check for date times duplicates...all other QC is done within functions
+if (anyDuplicated(data$date_time_UTC)!=0){stop("Duplicated Dates/Times")}
 
 #Write Data
-write.csv(TB_2019_underice,"B:/BuoyData/TroutBog/2019-2020_underice_TB/TB_2019_underice_chla.csv",row.names = FALSE)
+write.csv(data,paste(lake_file,file_name,sep="/"),row.names = FALSE)

@@ -8,6 +8,7 @@
 ##Probably won't get anymore updates since we don't really use these anymore, not great sensors
 
 pme_chla<-function(chla_file,depth.chla,deploy,retrieve) {
+  if (is.null(chla_file)){stop("No DO file")}
   if (missing(chla_file)){stop("Please provide file path for concatenated PME chloro file")}
   if (missing(depth.chla)){stop("Please provide depth of PME cyclops sensor")}
 

@@ -3,17 +3,19 @@
 
 ##this is an update from the individual lake functions written 9/2020 (see rbr_temp_xxlakeid.R)
 
-##Future additions--add code to subset by deployment and retrieval times--DONE
+##Update  1/14/2022 PJS--added QC checks for temps above 30c
+##                     --added QC check comparing surface mean to bottom mean, to make sure data not reversed
+
+##Future additions
 ##                --make sure deploy/retrieve is posix
-##                --QC checks that temp is within rage
+##
 ##                --QC to check if quick temp change indicating removed/placed in lake after subsetting
-##                --Message if temp value is <-100, indicating string not plugged in
-##                  (after subsetting for deployment/retrieval)
+
 
 rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
 
   #Check if all args are present
-  if (is.null(light_file)){stop("No light file")}
+  if (is.null(temp_file)){stop("No rbr Temp file")}
   if (missing(lake)){stop("Please provide NTL lake ID")}
   if(lake %in% c("TB","CB","SP","TR","ME")){
         #Good job you entered a valid lake ID
@@ -126,6 +128,11 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
              message("Temperate is less than -20, temp string likely not attached")
             }
   }
+
+  if(any(temp2[grep("tempC_",names(temp2))][,1]>30)=="TRUE"){message("Temperature above 30c")}
+  if(mean(temp2[grep("tempC_",names(temp2))][,1]) <
+     mean(temp2[grep("tempC_",names(temp2))][,length(temp2[grep("tempC_",names(temp2))])])){message("Surface mean less than bottom mean")}
+
 
   rbr_temps=temp2
 

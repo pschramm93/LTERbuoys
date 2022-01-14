@@ -1,7 +1,9 @@
 #Function to read HOBO light and temp pendant data
 #Written by PJS 9/2020
-#It's a bit of a mess and very specific to formatting, needs fixing but low on
-#priority list
+
+##updates  1/14/2022 PJS  --Added QC for duplicated dates and times--I think this is where an issue came from at one point...
+
+#It's a bit of a mess and very specific to formatting, needs fixing but low on priority list
 
 hobo_light=function(light_file,depth.light,deploy,retrieve){
   if (is.null(light_file)){stop("No light file")}
@@ -11,12 +13,12 @@ hobo_light=function(light_file,depth.light,deploy,retrieve){
 
   light=read.table(light_file,skip=1,sep = ',',header = T) #Read in data
   names(light)=c("rec_num",'date_cdt','temp',paste('lux_',depth.light,'cm',sep=""))   #set names
-  light$date_cdt=as.POSIXct(light$date_cdt,tz='America/Chicago','%m/%d/%y %H:%M:%S')  #make times POSIX format
-  attributes(light$date_cdt)$tzone<-"UTC"                                             #Convert to UTC
-  light$date_time_UTC=light$date_cdt                                                  #make UTC column
+  light$date_cdt=as.POSIXct(light$date_cdt,tz='America/Chicago','%m/%d/%y %I:%M:%S %p')  #make times POSIX format
+  light$date_time_UTC=format(light$date_cdt,tz="UTC",usetz=T)                             #make UTC column
+  light$date_time_UTC=as.POSIXct(light$date_time_UTC,tz="UTC",'%Y-%m-%d %H:%M:%S')
 
-  #untested
-  light$date_time_UTC=round.POSIXt(light$date_time_UTC,unit="mins")                   #round time stamps to minute
+  #untested, seems to work tho...
+  light$date_time_UTC=round(light$date_time_UTC,"mins")                   #round time stamps to minute
   light$date_time_UTC=as.POSIXct(light$date_time_UTC)                                 #convert back to POSIX
 
 #remove unwanted columns
@@ -31,4 +33,10 @@ hobo_light=function(light_file,depth.light,deploy,retrieve){
     light=subset(light,date_time_UTC>=deploy &
                    date_time_UTC<=retrieve)
   }
+
+  #Check for duplicated time stamps
+  if (anyDuplicated(light$date_time_UTC)!=0){stop("Duplicated Dates/Times")}
+
+
+  return(light)
 }

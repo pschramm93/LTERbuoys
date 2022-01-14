@@ -7,6 +7,7 @@
 #
 
 pro_co2=function(co2_file,depth.co2,deploy,retrieve){
+  if (is.null(co2_file)){stop("No DO file")}
   if (missing(co2_file)){stop("Please provide file path for concatenated ProOceanus co2 file")}
   if (missing(depth.co2)){stop("Please provide depth of ProOceanus sensor")}
   #Read in co2 file
