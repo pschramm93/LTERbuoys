@@ -24,13 +24,15 @@ source(paste(wd,"/loadbuoyfunc.R",sep=""))
 loadbuoyfunc(wd)
 
 #Enter deployment and Retrieval times in UTC
-deploy=  as.POSIXct('06/22/2019 06:30',tz='UTC','%m/%d/%Y %H:%M')
-retrieve=as.POSIXct('10/31/2019 01:00',tz='UTC','%m/%d/%Y %H:%M')
+deploy=  as.POSIXct('06/11/2021 22:00',tz='UTC','%m/%d/%Y %H:%M')
+retrieve=as.POSIXct('11/08/2021 10:00',tz='UTC','%m/%d/%Y %H:%M')
 
 #Set sensor depths
-depth.temp=25
-depth.do=85
-depth.light=35
+depth.temp=NULL
+depth.do=45
+depth.light=75
+depth.light2=225
+
 depth.chla=NULL
 depth.co2=NULL
 
@@ -38,30 +40,36 @@ depth.co2=NULL
 lake_ID="CB"
 
 #Set output file name
-file_name="CB_2019.csv"
+file_name="CB_2021.csv"
 
 #Set Files, if no data present set to NULL
-lake_file=  'Y:/GLEON/BuoyData/CrystalBog/2019'
-light_file= 'Y:/GLEON/BuoyData/CrystalBog/2019/Light/CB_2019_summer.csv'
-temp_file=  'Y:/GLEON/BuoyData/CrystalBog/2019/Temp/063327_20191031_1338/063327_20191031_1338_data.txt'
-do_file=    'Y:/GLEON/BuoyData/CrystalBog/2019/DO/CB_2019_do.TXT'
+lake_file=  'Y:/GLEON/BuoyData/CrystalBog/2021'
+do_file=paste(lake_file,"DO/CB_2021_do.txt",sep="/")
+temp_file=paste(lake_file,"Temp/063327_20201028_1708/063327_20201028_1708_data.txt",sep="/")
+light_file=paste(lake_file,"Light/CB_50cm.csv",sep="/")
+light_file2=paste(lake_file,"Light/CB_2m.csv",sep="/")
+
 chla_file=  NULL
 co2_file=   NULL
 
 
 
-#Run buoy run
+#Run buoy run--Shouldn't need to change
+
 data.do=pme_do(do_file,depth.do,deploy,retrieve)
 data.temp=rbr_temp(lake_ID,temp_file,depth.temp,deploy,retrieve)
 data.light=hobo_light(light_file,depth.light,deploy,retrieve)
+data.light2=hobo_light(light_file2,depth.light2,deploy,retrieve)
+
 data.chla=pme_chla(chla_file,depth.chla,deploy,retrieve)
 data.co2=pro_co2(co2_file,depth.co2,deploy,retrieve)
 
 
 
+##Needs automation for merging...
+
 #get dataframes that have "data." pattern
 #param_list=ls(envir = .GlobalEnv)[grep(pattern = "data.",x=ls(envir = .GlobalEnv))]
-
 
 
 data=merge(data.do,data.temp,by.x="date_time_UTC",by.y="date_time_UTC",all=T)

@@ -5,6 +5,7 @@
 
 ##Update  1/14/2022 PJS--added QC checks for temps above 30c
 ##                     --added QC check comparing surface mean to bottom mean, to make sure data not reversed
+##                     --added auto generating plot for QC
 
 ##Future additions
 ##                --make sure deploy/retrieve is posix
@@ -132,6 +133,10 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
   if(any(temp2[grep("tempC_",names(temp2))][,1]>30)=="TRUE"){message("Temperature above 30c")}
   if(mean(temp2[grep("tempC_",names(temp2))][,1]) <
      mean(temp2[grep("tempC_",names(temp2))][,length(temp2[grep("tempC_",names(temp2))])])){message("Surface mean less than bottom mean")}
+
+plot(temp2$date_time_UTC,temp2[grep("tempC_",names(temp2))][,1],col="red",xlab = "Month",ylab = "Temp C")
+points(temp2$date_time_UTC,temp2[grep("tempC_",names(temp2))][,length(temp2[grep("tempC_",names(temp2))])],col="blue")
+legend("topleft",legend=c("Surface","Bottom"),fill = c("red","blue"))
 
 
   rbr_temps=temp2
