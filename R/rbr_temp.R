@@ -6,15 +6,15 @@
 ##Update  1/14/2022 PJS--added QC checks for temps above 30c
 ##                     --added QC check comparing surface mean to bottom mean, to make sure data not reversed
 ##                     --added auto generating plot for QC
-
+##                     --switched time stuff to lubridate
 ##Future additions
 ##                --make sure deploy/retrieve is posix
 ##
 ##                --QC to check if quick temp change indicating removed/placed in lake after subsetting
 
 
-rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
-
+rbr_temp=function(lake,temp_file,depth.temp,time_offset,deploy,retrieve){
+  require(lubridate)
   #Check if all args are present
   if (is.null(temp_file)){stop("No rbr Temp file")}
   if (missing(lake)){stop("Please provide NTL lake ID")}
@@ -26,6 +26,7 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
 
   if (missing(temp_file)){stop("Please provide file path for RBR temperature data")}
   if (missing(depth.temp)){stop("Please provide depth of first temp node")}
+  if (missing(time_offset)){stop("Please provide time offset, UTC-x")}
 
 
   if (lake=="TB"){
@@ -33,10 +34,12 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
     #read in temperatures
     temp=read.table(temp_file,sep=",",skip=1)
     #set names
-    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20")
+    names(temp)=c("time","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20")
     #Declare time as Posix
-    temp$time_UTC=as.POSIXct(temp$time_UTC,tz="America/Chicago",'%Y-%m-%d %H:%M:%OS')
-    attributes(temp$time_UTC)$tzone<-"UTC"
+    temp$time=ymd_hms(paste(temp$time,"-0",time_offset,"00",sep=""))
+    temp$time=round_date(temp$time,"minute")
+
+
     #Reverse order of temps, since RBR thinks we want the bottom temps first...
     temp2=temp[,c(1,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2)]
 
@@ -52,10 +55,11 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
     #read in temperatures
     temp=read.table(temp_file,sep=",",skip=1)
     #set names
-    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9")
+    names(temp)=c("time","d1","d2","d3","d4","d5","d6","d7","d8","d9")
     #Declare time as Posix
-    temp$time_UTC=as.POSIXct(temp$time_UTC,tz="America/Chicago",'%Y-%m-%d %H:%M:%OS')
-    attributes(temp$time_UTC)$tzone<-"UTC"
+    temp$time=ymd_hms(paste(temp$time,"-0",time_offset,"00",sep=""))
+    temp$time=round_date(temp$time,"minute")
+
     #Reverse order of temps, since RBR thinks we want the bottom temps first...
     temp2=temp[,c(1,10,9,8,7,6,5,4,3,2)]
 
@@ -71,10 +75,11 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
     #read in temperatures
     temp=read.table(temp_file,sep=",",skip=1)
     #set names
-    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20","d21","d22","d23","d24")
+    names(temp)=c("time","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20","d21","d22","d23","d24")
     #Declare time as Posix
-    temp$time_UTC=as.POSIXct(temp$time_UTC,tz="America/Chicago",'%Y-%m-%d %H:%M:%OS')
-    attributes(temp$time_UTC)$tzone<-"UTC"
+    temp$time=ymd_hms(paste(temp$time,"-0",time_offset,"00",sep=""))
+    temp$time=round_date(temp$time,"minute")
+
     #Reverse order of temps, since RBR thinks we want the bottom temps first...
     temp2=temp[,c(1,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2)]
 
@@ -92,10 +97,11 @@ rbr_temp=function(lake,temp_file,depth.temp,deploy,retrieve){
     #read in temperatures
     temp=read.table(temp_file,sep=",",skip=1)
     #set names
-    names(temp)=c("time_UTC","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20","d21","d22","d23","d24")
+    names(temp)=c("time","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20","d21","d22","d23","d24")
     #Declare time as Posix
-    temp$time_UTC=as.POSIXct(temp$time_UTC,tz="America/Chicago",'%Y-%m-%d %H:%M:%OS')
-    attributes(temp$time_UTC)$tzone<-"UTC"
+    temp$time=ymd_hms(paste(temp$time,"-0",time_offset,"00",sep=""))
+    temp$time=round_date(temp$time,"minute")
+
 
     #Reverse order of temps, since RBR thinks we want the bottom temps first...
     temp2=temp[,c(1,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2)]

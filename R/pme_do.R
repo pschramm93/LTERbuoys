@@ -7,24 +7,28 @@
 ##                     --added QC check for Q values
 ##                     --added QC check for battery voltage (probably not needed)
 ##                     --added QC plot
+##       1/21/2022 PJS--changed to lubridate time package
+##                     --add do flag when Q is less than 0.7
+##                     --deletes Q column if min(Q)>0.7, leaves if min(Q)<0.7
 ##Future additions
-##                --check to make sure deploy and retrieve in posixct format
 ##                --QC to check if quick temp change indicating removed/placed in lake after subsetting
-##                --add do flag when Q is less than 0.7
-##                  data$do_flag=ifelse(data$DO_Qfactor<0.7,"V",NA)
+
 
 
 pme_do<-function(do_file,depth.do,deploy,retrieve) {
+  require(lubridate)
   if (is.null(do_file)){stop("No DO file")}
   if (missing(do_file)){stop("Please provide file path for concatenated PME do file")}
   if (missing(depth.do)){stop("Please provide depth of PME do sensor")}
 
+
   #Read in text file
   do_pme=read.table(do_file,sep=",",skip=9)
   #rename variables
-  names(do_pme)=c("timestamp","date_time_UTC","time_cen","batt_v","temp_minidot_c",paste("do_mgl_",depth.do,'cm',sep=''),paste("do_sat_",depth.do,'cm',sep=''),"Q")
+  names(do_pme)=c("timestamp","date_time_UTC","time_cut","batt_v","temp_minidot_c",paste("do_mgl_",depth.do,'cm',sep=''),paste("do_sat_",depth.do,'cm',sep=''),"Q")
   #Convert time vector to posix
-  do_pme$date_time_UTC=as.POSIXct(do_pme$date_time_UTC,tz='UTC','%Y-%m-%d %H:%M:%S')
+  do_pme$date_time_UTC=ymd_hms(do_pme$date_time_UTC)
+
 
   #QC check on the Q value and battery
 
@@ -35,7 +39,8 @@ pme_do<-function(do_file,depth.do,deploy,retrieve) {
   if(any((do_pme$batt_v<2.5)=="TRUE")){print("Battery less than 2.5V")}
 
   #remove extra variables
-  do_pme=within(do_pme,rm(list=c("time_cen","timestamp","batt_v")))
+  do_pme=within(do_pme,rm(list=c("time_cut","timestamp","batt_v")))
+  if(any((do_pme$Q<0.75)=="FALSE")){do_pme=within(do_pme,rm(list=c("Q")))}
 
   if (missing(deploy)||missing(retrieve)){
     #proceed to return the data
@@ -49,7 +54,7 @@ pme_do<-function(do_file,depth.do,deploy,retrieve) {
   #QC
 
  if(any(do_pme[grep("do_mgl",names(do_pme))]<0)=="TRUE") {stop("DO less than 0")}
- if(any(do_pme[grep("do_mgl",names(do_pme))]>15)=="TRUE"){stop("DO greater than 15mg/L")}
+ if(any(do_pme[grep("do_mgl",names(do_pme))]>15)=="TRUE"){warning("DO greater than 15mg/L")}
 
 plot(do_pme$date_time_UTC,do_pme[,grep("do_mgl",names(do_pme))])
 
